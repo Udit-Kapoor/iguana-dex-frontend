@@ -46,8 +46,8 @@ export function getV3Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphPara
     [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_SEPOLIA]: null,
     [ChainId.ETHERLINK_TESTNET]:
-      'https://api.studio.thegraph.com/query/107385/exchange-v3-etherlink-test/version/latest',
-    [ChainId.ETHERLINK]: `https://gateway.thegraph.com/api/${etherlinkApiKey}/subgraphs/id/2Av7PEgRn7PtLhGibJYSYuGX1VfLtnfRn4Sw9rgAkAC`,
+      'https://api.studio.thegraph.com/query/94382/exchange-v3-etherlink-testnet/version/latest',
+    [ChainId.ETHERLINK]: `https://api.studio.thegraph.com/query/94382/exchange-v3-etherlink-tmp/version/latest`,
   } satisfies Record<ChainId, string | null>
 }
 
