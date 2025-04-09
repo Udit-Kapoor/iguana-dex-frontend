@@ -22,7 +22,7 @@ export const STABLESWAP_SUBGRAPHS = {
   [ChainId.ARBITRUM_ONE]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-stableswap-arb',
 }
 
-export function getV3Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphParams) {
+export function getV3Subgraphs({ noderealApiKey }: SubgraphParams) {
   return {
     [ChainId.ETHEREUM]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth',
     [ChainId.GOERLI]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-goerli',
