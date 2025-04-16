@@ -22,7 +22,7 @@ export const STABLESWAP_SUBGRAPHS = {
   [ChainId.ARBITRUM_ONE]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-stableswap-arb',
 }
 
-export function getV3Subgraphs({ noderealApiKey }: SubgraphParams) {
+export function getV3Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphParams) {
   return {
     [ChainId.ETHEREUM]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth',
     [ChainId.GOERLI]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-goerli',
@@ -47,7 +47,7 @@ export function getV3Subgraphs({ noderealApiKey }: SubgraphParams) {
     [ChainId.BASE_SEPOLIA]: null,
     [ChainId.ETHERLINK_TESTNET]:
       'https://api.studio.thegraph.com/query/94382/exchange-v3-etherlink-testnet/version/latest',
-    [ChainId.ETHERLINK]: `https://api.studio.thegraph.com/query/94382/exchange-v3-etherlink-tmp/version/latest`,
+    [ChainId.ETHERLINK]: `https://gateway.thegraph.com/api/${etherlinkApiKey}/subgraphs/id/64U1bqcUFUMcxoD9FpFfPZgoeX4RCf5tFA3c9cce2BTg`,
   } satisfies Record<ChainId, string | null>
 }
 
