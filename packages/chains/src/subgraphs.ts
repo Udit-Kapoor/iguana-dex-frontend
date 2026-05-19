@@ -22,7 +22,7 @@ export const STABLESWAP_SUBGRAPHS = {
   [ChainId.ARBITRUM_ONE]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-stableswap-arb',
 }
 
-export function getV3Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphParams) {
+export function getV3Subgraphs({ noderealApiKey }: SubgraphParams) {
   return {
     [ChainId.ETHEREUM]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth',
     [ChainId.GOERLI]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-goerli',
@@ -46,12 +46,13 @@ export function getV3Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphPara
     [ChainId.ARBITRUM_SEPOLIA]: null,
     [ChainId.BASE_SEPOLIA]: null,
     [ChainId.ETHERLINK_TESTNET]:
-      'https://api.studio.thegraph.com/query/94382/exchange-v3-etherlink-testnet/version/latest',
-    [ChainId.ETHERLINK]: `https://gateway.thegraph.com/api/${etherlinkApiKey}/subgraphs/id/64U1bqcUFUMcxoD9FpFfPZgoeX4RCf5tFA3c9cce2BTg`,
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/Uranium-Exchange-Etherlink-Shadownet/1.0.0/gn',
+    [ChainId.ETHERLINK]:
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/Uranium-Exchange-Etherlink/0.0.3/gn',
   } satisfies Record<ChainId, string | null>
 }
 
-export function getV2Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphParams) {
+export function getV2Subgraphs({ noderealApiKey }: SubgraphParams) {
   return {
     [ChainId.BSC]: 'https://proxy-worker-api.pancakeswap.com/bsc-exchange',
     [ChainId.ETHEREUM]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/exhange-eth',
@@ -63,8 +64,10 @@ export function getV2Subgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphPara
     [ChainId.LINEA]: 'https://api.studio.thegraph.com/query/45376/exchange-v2-linea/version/latest',
     [ChainId.BASE]: 'https://api.studio.thegraph.com/query/45376/exchange-v2-base/version/latest',
     [ChainId.OPBNB]: `https://open-platform-ap.nodereal.io/${noderealApiKey}/opbnb-mainnet-graph-query/subgraphs/name/pancakeswap/exchange-v2`,
-    [ChainId.ETHERLINK_TESTNET]: 'https://api.studio.thegraph.com/query/107385/exchange-v2-etl-testnet/version/latest',
-    [ChainId.ETHERLINK]: `https://gateway.thegraph.com/api/${etherlinkApiKey}/subgraphs/id/7vaswWAiGSVk4WKe9KRnGRsrfwSDqS35Cxf5sA67KWWe`,
+    [ChainId.ETHERLINK_TESTNET]:
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/Uranium-Exchange-Etherlink-Shadownet/1.0.0/gn',
+    [ChainId.ETHERLINK]:
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/Uranium-Exchange-Etherlink/0.0.3/gn',
   }
 }
 

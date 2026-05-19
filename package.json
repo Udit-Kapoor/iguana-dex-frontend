@@ -40,7 +40,7 @@
     "prepare": "husky install"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
@@ -68,7 +68,7 @@
     "wrangler": "2.20.2"
   },
   "volta": {
-    "node": "18.16.0",
+    "node": "20.19.0",
     "pnpm": "8.15.4"
   },
   "dependencies": {
