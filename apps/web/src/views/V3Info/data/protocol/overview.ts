@@ -7,13 +7,12 @@ import { getPercentChange } from '../../utils/data'
 export const GLOBAL_DATA = (block?: string | number) => {
   const queryString = ` query pancakeFactories {
       factories(
-       ${block !== undefined ? `block: { number: ${block}}` : ``} 
+       ${block !== undefined ? `block: { number: ${block}}` : ``}
        first: 1) {
         txCount
         totalVolumeUSD
         totalFeesUSD
         totalValueLockedUSD
-        totalProtocolFeesUSD
       }
     }`
   return gql`
@@ -27,7 +26,6 @@ interface GlobalResponse {
     totalVolumeUSD: string
     totalFeesUSD: string
     totalValueLockedUSD: string
-    totalProtocolFeesUSD: string
   }[]
 }
 
@@ -41,11 +39,11 @@ export async function fetchProtocolData(
   try {
     const [block24, block48] = blocks ?? []
 
-    // fetch all data
+    // fetch all data — skip historical queries if blocks are unavailable
     const [data, data24, data48] = await Promise.all([
       dataClient.request<GlobalResponse>(GLOBAL_DATA()),
-      dataClient.request<GlobalResponse>(GLOBAL_DATA(block24?.number ?? 0)),
-      dataClient.request<GlobalResponse>(GLOBAL_DATA(block48?.number ?? 0)),
+      block24?.number ? dataClient.request<GlobalResponse>(GLOBAL_DATA(block24.number)) : Promise.resolve(null),
+      block48?.number ? dataClient.request<GlobalResponse>(GLOBAL_DATA(block48.number)) : Promise.resolve(null),
     ])
 
     const parsed = data?.factories?.[0]
@@ -81,17 +79,13 @@ export async function fetchProtocolData(
 
     const feesOneWindowAgo =
       parsed24 && parsed48
-        ? new BigNumber(parsed24.totalFeesUSD)
-            .minus(parsed24.totalProtocolFeesUSD)
-            .minus(new BigNumber(parsed48.totalFeesUSD).minus(parsed48.totalProtocolFeesUSD))
+        ? new BigNumber(parsed24.totalFeesUSD).minus(new BigNumber(parsed48.totalFeesUSD))
         : undefined
 
     const feesUSD =
       parsed && parsed24
-        ? new BigNumber(parsed.totalFeesUSD)
-            .minus(parsed.totalProtocolFeesUSD)
-            .minus(new BigNumber(parsed24.totalFeesUSD).minus(parsed24.totalProtocolFeesUSD))
-        : new BigNumber(parsed.totalFeesUSD).minus(parsed.totalProtocolFeesUSD)
+        ? new BigNumber(parsed.totalFeesUSD).minus(new BigNumber(parsed24.totalFeesUSD))
+        : new BigNumber(parsed.totalFeesUSD)
 
     const feeChange =
       feesUSD && feesOneWindowAgo ? getPercentChange(feesUSD.toString(), feesOneWindowAgo.toString()) : 0

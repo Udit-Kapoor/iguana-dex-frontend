@@ -344,12 +344,38 @@ export const useChainNameByQuery = (): MultiChainName => {
       case 'opbnb':
         return 'OPBNB'
       case 'etherlink':
-        return 'ETHERLINK'
       default:
         return 'ETHERLINK'
     }
   }, [query])
   return chainName
+}
+
+export const useChainNameByQueryExtend = (): MultiChainNameExtend => {
+  const { query } = useRouter()
+  return useMemo(() => {
+    switch (query?.chainName) {
+      case 'eth':
+        return 'ETH'
+      case 'polygon-zkevm':
+        return 'POLYGON_ZKEVM'
+      case 'zksync':
+        return 'ZKSYNC'
+      case 'arb':
+        return 'ARB'
+      case 'linea':
+        return 'LINEA'
+      case 'base':
+        return 'BASE'
+      case 'opbnb':
+        return 'OPBNB'
+      case 'etherlink-testnet':
+        return 'ETHERLINK_TESTNET'
+      case 'etherlink':
+      default:
+        return 'ETHERLINK'
+    }
+  }, [query])
 }
 
 export const useChainIdByQuery = () => {

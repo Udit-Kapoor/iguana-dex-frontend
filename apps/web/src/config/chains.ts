@@ -32,8 +32,8 @@ const bsc = {
 } satisfies Chain
 
 const etherlinkTestnet = {
-  id: 128_123,
-  name: 'Etherlink Testnet',
+  id: 127_823,
+  name: 'Etherlink Shadownet',
   network: 'etherlink-testnet',
   nativeCurrency: {
     decimals: 18,
@@ -41,8 +41,8 @@ const etherlinkTestnet = {
     symbol: 'XTZ',
   },
   rpcUrls: {
-    public: { http: ['https://node.ghostnet.etherlink.com'] },
-    default: { http: ['https://node.ghostnet.etherlink.com'] },
+    public: { http: ['https://node.shadownet.etherlink.com'] },
+    default: { http: ['https://node.shadownet.etherlink.com'] },
   },
   blockExplorers: {
     etherscan: { name: 'Testnet Etherscout', url: 'https://testnet.explorer.etherlink.com/' },

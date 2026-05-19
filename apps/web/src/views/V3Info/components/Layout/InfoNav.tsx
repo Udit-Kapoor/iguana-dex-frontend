@@ -17,7 +17,7 @@ import { ASSET_CDN } from 'config/constants/endpoints'
 import { useRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
 import { multiChainId, multiChainPaths, multiChainShortName } from 'state/info/constant'
-import { useChainNameByQuery, useMultiChainPath } from 'state/info/hooks'
+import { useChainNameByQueryExtend, useMultiChainPath } from 'state/info/hooks'
 import { styled } from 'styled-components'
 import { chains } from 'utils/wagmi'
 import { Chain } from 'wagmi/chains'
@@ -100,11 +100,30 @@ const InfoNav: React.FC<{ isStableSwap: boolean }> = ({ isStableSwap }) => {
   )
 }
 
-const targetChains = [etherlink]
+const etherlinkTestnet = {
+  id: 127_823,
+  name: 'Etherlink Shadownet',
+  network: 'etherlink-testnet',
+  nativeCurrency: { decimals: 18, name: 'tez', symbol: 'XTZ' },
+  rpcUrls: {
+    public: { http: ['https://node.shadownet.etherlink.com'] },
+    default: { http: ['https://node.shadownet.etherlink.com'] },
+  },
+  blockExplorers: {
+    etherscan: { name: 'Testnet Etherscout', url: 'https://testnet.explorer.etherlink.com/' },
+    default: { name: 'Testnet Etherscout', url: 'https://testnet.explorer.etherlink.com/' },
+  },
+  contracts: {
+    multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11', blockCreated: 220050 },
+  },
+  testnet: true,
+} as const satisfies Chain
+
+const targetChains = [etherlink, etherlinkTestnet]
 
 export const NetworkSwitcher: React.FC<{ activeIndex: number }> = ({ activeIndex }) => {
   const { t } = useTranslation()
-  const chainName = useChainNameByQuery()
+  const chainName = useChainNameByQueryExtend()
   const foundChain = chains.find((d) => d.id === multiChainId[chainName])
   const symbol = multiChainShortName[foundChain?.id ?? -1] ?? foundChain?.nativeCurrency?.symbol
   const router = useRouter()

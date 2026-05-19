@@ -118,7 +118,7 @@ export const multiChainStartTime = {
   ETHERLINK: 1721765600, // Tue 23 Jul 2024 08:13:20 UTC+0000
 }
 
-export const multiChainId: Record<MultiChainName, ChainId> = {
+export const multiChainId: Record<MultiChainNameExtend, ChainId> = {
   BSC: ChainId.BSC,
   ETH: ChainId.ETHEREUM,
   POLYGON_ZKEVM: ChainId.POLYGON_ZKEVM,
@@ -128,6 +128,9 @@ export const multiChainId: Record<MultiChainName, ChainId> = {
   BASE: ChainId.BASE,
   OPBNB: ChainId.OPBNB,
   ETHERLINK: ChainId.ETHERLINK,
+  BSC_TESTNET: ChainId.BSC_TESTNET,
+  ZKSYNC_TESTNET: ChainId.ZKSYNC_TESTNET,
+  ETHERLINK_TESTNET: ChainId.ETHERLINK_TESTNET,
 }
 
 export const multiChainPaths = {
@@ -140,6 +143,7 @@ export const multiChainPaths = {
   [ChainId.BASE]: '/base',
   [ChainId.OPBNB]: '/opbnb',
   [ChainId.ETHERLINK]: '/etherlink',
+  [ChainId.ETHERLINK_TESTNET]: '/etherlink-testnet',
 }
 
 export const multiChainQueryClient = {
