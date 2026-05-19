@@ -188,7 +188,7 @@ export const useTopTokensData = ():
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
 
   const { data } = useQuery({
-    queryKey: [`v3/info/token/TopTokensData/${chainId}`, chainId],
+    queryKey: [`v3/info/token/TopTokensData/${chainId}/${blocks?.[0]?.number ?? 'noblocks'}`, chainId],
 
     queryFn: () =>
       fetchTopTokens(
@@ -196,7 +196,7 @@ export const useTopTokensData = ():
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && blocks.length > 0),
+    enabled: Boolean(chainId),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return data?.data
@@ -228,7 +228,7 @@ export const useTokensData = (addresses: string[], targetChainId?: ChainId): Tok
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && addresses && addresses?.length > 0 && blocks?.length > 0),
+    enabled: Boolean(chainId && addresses && addresses?.length > 0),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   const allTokensData = useMemo(() => {
@@ -259,7 +259,7 @@ export const useTokenData = (address: string): TokenData | undefined => {
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && address && address !== 'undefined' && blocks?.length > 0),
+    enabled: Boolean(chainId && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
 
@@ -332,7 +332,7 @@ export const useTokenTransactions = (address: string): Transaction[] | undefined
     enabled: Boolean(chainId && address),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return useMemo(() => data?.data?.filter((d) => d.amountUSD > 0), [data])
+  return useMemo(() => data?.data ?? [], [data])
 }
 
 export async function fetchTopPools(dataClient: GraphQLClient, chainId: ChainId, blocks?: Block[]) {
@@ -360,7 +360,7 @@ export const useTopPoolsData = ():
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
 
   const { data } = useQuery({
-    queryKey: [`v3/info/pool/TopPoolsData/${chainId}`, chainId],
+    queryKey: [`v3/info/pool/TopPoolsData/${chainId}/${blocks?.[0]?.number ?? 'noblocks'}`, chainId],
 
     queryFn: () =>
       fetchTopPools(
@@ -369,7 +369,7 @@ export const useTopPoolsData = ():
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && blocks.length > 0),
+    enabled: Boolean(chainId),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return data?.data
@@ -391,7 +391,7 @@ export const usePoolsData = (addresses: string[]): PoolData[] | undefined => {
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && blocks?.length > 0 && addresses && addresses?.length > 0),
+    enabled: Boolean(chainId && addresses && addresses?.length > 0),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return useMemo(() => (data?.data ? Object.values(data.data) : undefined), [data])
@@ -413,7 +413,7 @@ export const usePoolData = (address: string): PoolData | undefined => {
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
 
-    enabled: Boolean(chainId && blocks && blocks?.length > 0 && address && address !== 'undefined'),
+    enabled: Boolean(chainId && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
   return data?.data?.[address] ?? undefined
@@ -428,7 +428,7 @@ export const usePoolTransactions = (address: string): Transaction[] | undefined 
     enabled: Boolean(chainId && address),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return useMemo(() => data?.data?.filter((d) => d.amountUSD > 0) ?? undefined, [data])
+  return useMemo(() => data?.data ?? undefined, [data])
 }
 
 export const usePoolChartData = (address: string): PoolChartEntry[] | undefined => {
