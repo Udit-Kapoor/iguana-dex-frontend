@@ -29,7 +29,7 @@ export enum OnRampChainId {
   SEPOLIA = 11155111,
   BTC = 0,
   ETHERLINK = 42793,
-  ETHERLINK_TESTNET = 128123,
+  ETHERLINK_TESTNET = 127823,
 }
 export enum ONRAMP_PROVIDERS {
   MoonPay = 'MoonPay',

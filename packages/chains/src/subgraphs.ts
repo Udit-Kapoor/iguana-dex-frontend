@@ -71,7 +71,7 @@ export function getV2Subgraphs({ noderealApiKey }: SubgraphParams) {
   }
 }
 
-export function getBlocksSubgraphs({ noderealApiKey, etherlinkApiKey }: SubgraphParams) {
+export function getBlocksSubgraphs({ noderealApiKey }: SubgraphParams) {
   return {
     [ChainId.BSC]: 'https://api.thegraph.com/subgraphs/name/pancakeswap/blocks',
     [ChainId.ETHEREUM]: 'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
@@ -81,7 +81,9 @@ export function getBlocksSubgraphs({ noderealApiKey, etherlinkApiKey }: Subgraph
     [ChainId.LINEA]: 'https://api.studio.thegraph.com/query/45376/blocks-linea/version/latest',
     [ChainId.BASE]: 'https://api.studio.thegraph.com/query/48211/base-blocks/version/latest',
     [ChainId.OPBNB]: `https://open-platform-ap.nodereal.io/${noderealApiKey}/opbnb-mainnet-graph-query/subgraphs/name/pancakeswap/blocks`,
-    [ChainId.ETHERLINK_TESTNET]: 'https://api.studio.thegraph.com/query/107385/blocks-etherlink-testnet/version/latest',
-    [ChainId.ETHERLINK]: `https://gateway.thegraph.com/api/${etherlinkApiKey}/subgraphs/id/8SDVxT5MJd7YaFR8pmSsQ5Lxb49oGzDMRt3T8RQWepUq`,
+    [ChainId.ETHERLINK_TESTNET]:
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/shadownet-blocks/1.0.0/gn',
+    [ChainId.ETHERLINK]:
+      'https://api.goldsky.com/api/public/project_cmmca78ay1dkl01wybstdewk2/subgraphs/etherlink-blocks/1.0.0/gn',
   }
 }
