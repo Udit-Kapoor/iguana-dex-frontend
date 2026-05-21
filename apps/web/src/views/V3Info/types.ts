@@ -69,6 +69,7 @@ export type TokenData = {
   volumeUSD: number
   volumeUSDChange: number
   volumeUSDWeek: number
+  volumeToken: number
   txCount: number
 
   // fees
@@ -95,6 +96,11 @@ export type PoolChartEntry = {
   volumeUSD: number
   totalValueLockedUSD: number
   feesUSD: number
+  // raw token amounts returned by the subgraph (USD values are always 0 there)
+  tvlToken0?: number
+  tvlToken1?: number
+  volumeToken0?: number
+  feeTier?: number
 }
 
 export interface PoolData {
@@ -139,6 +145,8 @@ export interface PoolData {
   // token amounts
   tvlToken0: number
   tvlToken1: number
+  volumeToken0: number
+  volumeToken1: number
 
   // 24h fees
   feeUSD

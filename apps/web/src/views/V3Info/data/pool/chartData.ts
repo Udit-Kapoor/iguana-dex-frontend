@@ -25,8 +25,12 @@ const POOL_CHART = gql`
       tvlUSD
       feesUSD
       protocolFeesUSD
+      volumeToken0
+      volumeToken1
       pool {
         feeTier
+        totalValueLockedToken0
+        totalValueLockedToken1
       }
     }
   }
@@ -39,8 +43,12 @@ interface ChartResults {
     tvlUSD: string
     feesUSD: string
     protocolFeesUSD: string
+    volumeToken0: string
+    volumeToken1: string
     pool: {
       feeTier: string
+      totalValueLockedToken0: string
+      totalValueLockedToken1: string
     }
   }[]
 }
@@ -52,8 +60,12 @@ export async function fetchPoolChartData(address: string, client: GraphQLClient)
     tvlUSD: string
     feesUSD: string
     protocolFeesUSD: string
+    volumeToken0: string
+    volumeToken1: string
     pool: {
       feeTier: string
+      totalValueLockedToken0: string
+      totalValueLockedToken1: string
     }
   }[] = []
   const startTimestamp = 1619170975
@@ -76,9 +88,9 @@ export async function fetchPoolChartData(address: string, client: GraphQLClient)
         if (chartData.poolDayDatas.length < 1000 || error) {
           allFound = true
         }
-        if (chartData.poolDayDatas) {
-          data = data.concat(chartData.poolDayDatas)
-        }
+        data = data.concat(chartData.poolDayDatas)
+      } else {
+        allFound = true
       }
     }
   } catch (e) {
@@ -98,6 +110,11 @@ export async function fetchPoolChartData(address: string, client: GraphQLClient)
         volumeUSD: parseFloat(dayData.volumeUSD),
         totalValueLockedUSD: parseFloat(dayData.tvlUSD) - tvlAdjust,
         feesUSD: new BigNumber(dayData.feesUSD).minus(dayData.protocolFeesUSD).toNumber(),
+        // raw token amounts for price-based USD recomputation in the hook
+        tvlToken0: parseFloat(dayData.pool.totalValueLockedToken0),
+        tvlToken1: parseFloat(dayData.pool.totalValueLockedToken1),
+        volumeToken0: parseFloat(dayData.volumeToken0),
+        feeTier: parseFloat(dayData.pool.feeTier),
       }
       return accum
     }, {})
@@ -111,11 +128,16 @@ export async function fetchPoolChartData(address: string, client: GraphQLClient)
       const nextDay = timestamp + ONE_DAY_UNIX
       const currentDayIndex = parseInt((nextDay / ONE_DAY_UNIX).toFixed(0))
       if (!Object.keys(formattedExisting).includes(currentDayIndex.toString())) {
+        const prevEntry = formattedExisting[currentDayIndex - 1] ?? firstEntry
         formattedExisting[currentDayIndex] = {
           date: nextDay,
           volumeUSD: 0,
           totalValueLockedUSD: latestTvl,
           feesUSD: 0,
+          tvlToken0: prevEntry?.tvlToken0 ?? 0,
+          tvlToken1: prevEntry?.tvlToken1 ?? 0,
+          volumeToken0: 0,
+          feeTier: prevEntry?.feeTier,
         }
       } else {
         latestTvl = formattedExisting[currentDayIndex].totalValueLockedUSD

@@ -182,6 +182,19 @@ export async function fetchPoolDatas(
               .minus(current?.protocolFeesUSD)
               .minus(new BigNumber(oneDay?.feesUSD).minus(oneDay?.protocolFeesUSD))
           : new BigNumber(current?.feesUSD).minus(current?.protocolFeesUSD)
+      const volumeToken0 =
+        current && oneDay
+          ? parseFloat(current.volumeToken0) - parseFloat(oneDay.volumeToken0)
+          : current
+          ? parseFloat(current.volumeToken0)
+          : 0
+      const volumeToken1 =
+        current && oneDay
+          ? parseFloat(current.volumeToken1) - parseFloat(oneDay.volumeToken1)
+          : current
+          ? parseFloat(current.volumeToken1)
+          : 0
+
       const tvlToken0 = current ? parseFloat(current.totalValueLockedToken0) : 0
       const tvlToken1 = current ? parseFloat(current.totalValueLockedToken1) : 0
       let tvlUSD = current ? parseFloat(current.totalValueLockedUSD) : 0
@@ -235,6 +248,8 @@ export async function fetchPoolDatas(
           tvlUSDChange,
           tvlToken0,
           tvlToken1,
+          volumeToken0,
+          volumeToken1,
           feeUSD: feeUSD.toNumber(),
         }
       }

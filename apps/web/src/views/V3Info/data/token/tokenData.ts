@@ -140,6 +140,13 @@ export async function fetchedTokenDatas(
           : current
           ? parseFloat(current.volumeUSD)
           : 0
+      const volumeToken =
+        current && oneDay
+          ? parseFloat(current.volume) - parseFloat(oneDay.volume)
+          : current
+          ? parseFloat(current.volume)
+          : 0
+
       const tvlUSD = current ? parseFloat(current.totalValueLockedUSD) : 0
       const tvlUSDChange = getPercentChange(
         parseFloat(current?.totalValueLockedUSD),
@@ -176,6 +183,7 @@ export async function fetchedTokenDatas(
         volumeUSD,
         volumeUSDChange,
         volumeUSDWeek,
+        volumeToken,
         txCount,
         tvlUSD,
         feesUSD,

@@ -11,6 +11,7 @@ import { v3Clients, v3InfoClients } from 'utils/graphql'
 import { useBlockFromTimeStampQuery } from 'views/Info/hooks/useBlocksFromTimestamps'
 
 import { useQuery } from '@tanstack/react-query'
+import type { PriceHistory, PricePoint } from 'pages/api/price/history'
 import { DURATION_INTERVAL, SUBGRAPH_START_BLOCK } from '../constants'
 import { fetchPoolChartData } from '../data/pool/chartData'
 import { fetchPoolDatas } from '../data/pool/poolData'
@@ -37,6 +38,85 @@ import {
   TokenData,
   Transaction,
 } from '../types'
+
+// ─── Pricing ────────────────────────────────────────────────────────────────
+
+const ONE_DAY_S = 86_400
+
+/** Forward-fill a sorted price series: returns the last known price on or before `date`. */
+function buildPriceLookup(points: PricePoint[]): (date: number) => number {
+  const sorted = [...points].sort((a, b) => a.date - b.date)
+  return (date: number) => {
+    const dayStart = Math.floor(date / ONE_DAY_S) * ONE_DAY_S
+    let price = 0
+    for (const p of sorted) {
+      if (p.date <= dayStart) price = p.price
+      else break
+    }
+    return price
+  }
+}
+
+const useTokenPrices = (chainId: ChainId | undefined): Record<string, number> => {
+  const network = chainId === ChainId.ETHERLINK_TESTNET ? 'shadownet' : 'mainnet'
+  const { data } = useQuery<Record<string, number>>({
+    queryKey: [`prices/${network}`],
+    queryFn: () => fetch(`/api/price/current?network=${network}`).then((r) => r.json()),
+    enabled: Boolean(chainId),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  })
+  return data ?? {}
+}
+
+const usePriceHistory = (chainId: ChainId | undefined, symbols: string[], startTime: number): PriceHistory => {
+  const network = chainId === ChainId.ETHERLINK_TESTNET ? 'shadownet' : 'mainnet'
+  const key = symbols.slice().sort().join(',')
+  const { data } = useQuery<PriceHistory>({
+    queryKey: [`priceHistory/${network}/${key}/${startTime}`],
+    queryFn: () =>
+      fetch(`/api/price/history?network=${network}&symbols=${key}&startTime=${startTime}`).then((r) => r.json()),
+    enabled: Boolean(chainId && symbols.length && startTime > 0),
+    staleTime: 300_000,
+  })
+  return data ?? {}
+}
+
+function enrichPoolDataWithPrices(
+  data: { [address: string]: PoolData } | undefined,
+  prices: Record<string, number>,
+): { [address: string]: PoolData } | undefined {
+  if (!data || Object.keys(prices).length === 0) return data
+  return Object.fromEntries(
+    Object.entries(data).map(([addr, pool]) => {
+      const p0 = prices[pool.token0.symbol] ?? 0
+      const p1 = prices[pool.token1.symbol] ?? 0
+      if (!p0 && !p1) return [addr, pool]
+      const tvlUSD = pool.tvlToken0 * p0 + pool.tvlToken1 * p1
+      const volumeUSD = pool.volumeToken0 * p0
+      const feeUSD = volumeUSD * (pool.feeTier / 1_000_000)
+      return [addr, { ...pool, tvlUSD, volumeUSD, feeUSD }]
+    }),
+  )
+}
+
+function enrichTokenDataWithPrices(
+  data: { [address: string]: TokenData } | undefined,
+  prices: Record<string, number>,
+): { [address: string]: TokenData } | undefined {
+  if (!data || Object.keys(prices).length === 0) return data
+  return Object.fromEntries(
+    Object.entries(data).map(([addr, token]) => {
+      const price = prices[token.symbol] ?? 0
+      if (!price) return [addr, token]
+      const tvlUSD = token.tvlToken * price
+      const volumeUSD = token.volumeToken * price
+      return [addr, { ...token, tvlUSD, volumeUSD, priceUSD: price }]
+    }),
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 const QUERY_SETTINGS_IMMUTABLE = {
   retry: 3,
@@ -186,6 +266,7 @@ export const useTopTokensData = ():
   const chainId = multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/token/TopTokensData/${chainId}/${blocks?.[0]?.number ?? 'noblocks'}`, chainId],
@@ -199,7 +280,7 @@ export const useTopTokensData = ():
     enabled: Boolean(chainId),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return data?.data
+  return useMemo(() => enrichTokenDataWithPrices(data?.data, prices), [data, prices])
 }
 
 const graphPerPage = 50
@@ -217,13 +298,14 @@ export const useTokensData = (addresses: string[], targetChainId?: ChainId): Tok
   const chainId = targetChainId ?? multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d], undefined, undefined, getChainName(chainId))
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/token/tokensData/${targetChainId}/${addresses?.join()}`, chainId],
 
     queryFn: () =>
       tokenDataFetcher(
-        v3InfoClients[chainId], // TODO:  v3InfoClients[chainId],
+        v3InfoClients[chainId],
         addresses,
         blocks?.filter((d) => d.number >= SUBGRAPH_START_BLOCK[chainId]),
       ),
@@ -240,7 +322,10 @@ export const useTokensData = (addresses: string[], targetChainId?: ChainId): Tok
     return undefined
   }, [data])
 
-  return useMemo(() => (allTokensData ? Object.values(allTokensData) : undefined), [allTokensData])
+  return useMemo(() => {
+    if (!allTokensData) return undefined
+    return Object.values(enrichTokenDataWithPrices(allTokensData, prices) ?? allTokensData)
+  }, [allTokensData, prices])
 }
 
 export const useTokenData = (address: string): TokenData | undefined => {
@@ -248,6 +333,7 @@ export const useTokenData = (address: string): TokenData | undefined => {
   const chainId = multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/token/tokenData/${chainId}/${address}`, chainId],
@@ -263,7 +349,10 @@ export const useTokenData = (address: string): TokenData | undefined => {
     ...QUERY_SETTINGS_IMMUTABLE,
   })
 
-  return data?.data?.[address]
+  return useMemo(() => {
+    const tokenMap = enrichTokenDataWithPrices(data?.data, prices)
+    return tokenMap?.[address]
+  }, [data, prices, address])
 }
 
 export const usePoolsForToken = (address: string): string[] | undefined => {
@@ -358,6 +447,7 @@ export const useTopPoolsData = ():
   const chainId = multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/pool/TopPoolsData/${chainId}/${blocks?.[0]?.number ?? 'noblocks'}`, chainId],
@@ -372,7 +462,7 @@ export const useTopPoolsData = ():
     enabled: Boolean(chainId),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return data?.data
+  return useMemo(() => enrichPoolDataWithPrices(data?.data, prices), [data, prices])
 }
 
 export const usePoolsData = (addresses: string[]): PoolData[] | undefined => {
@@ -380,6 +470,7 @@ export const usePoolsData = (addresses: string[]): PoolData[] | undefined => {
   const chainId = multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/pool/poolsData/${chainId}/${addresses.join()}`, chainId],
@@ -394,7 +485,10 @@ export const usePoolsData = (addresses: string[]): PoolData[] | undefined => {
     enabled: Boolean(chainId && addresses && addresses?.length > 0),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return useMemo(() => (data?.data ? Object.values(data.data) : undefined), [data])
+  return useMemo(() => {
+    if (!data?.data) return undefined
+    return Object.values(enrichPoolDataWithPrices(data.data, prices) ?? data.data)
+  }, [data, prices])
 }
 
 export const usePoolData = (address: string): PoolData | undefined => {
@@ -402,6 +496,7 @@ export const usePoolData = (address: string): PoolData | undefined => {
   const chainId = multiChainId[chainName]
   const [t24, t48, t7d] = getDeltaTimestamps()
   const { blocks } = useBlockFromTimeStampQuery([t24, t48, t7d])
+  const prices = useTokenPrices(chainId)
 
   const { data } = useQuery({
     queryKey: [`v3/info/pool/poolData/${chainId}/${address}`, chainId],
@@ -416,7 +511,10 @@ export const usePoolData = (address: string): PoolData | undefined => {
     enabled: Boolean(chainId && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return data?.data?.[address] ?? undefined
+  return useMemo(() => {
+    const poolMap = enrichPoolDataWithPrices(data?.data, prices)
+    return poolMap?.[address] ?? undefined
+  }, [data, prices, address])
 }
 export const usePoolTransactions = (address: string): Transaction[] | undefined => {
   const chainName = useChainNameByQueryExtend()
@@ -434,13 +532,53 @@ export const usePoolTransactions = (address: string): Transaction[] | undefined 
 export const usePoolChartData = (address: string): PoolChartEntry[] | undefined => {
   const chainName = useChainNameByQueryExtend()
   const chainId = multiChainId[chainName]
+
   const { data } = useQuery({
     queryKey: [`v3/info/pool/poolChartData/${chainId}/${address}`, chainId],
     queryFn: () => fetchPoolChartData(address, v3InfoClients[chainId]),
     enabled: Boolean(chainId && address && address !== 'undefined'),
     ...QUERY_SETTINGS_IMMUTABLE,
   })
-  return data?.data
+
+  // Pool metadata needed for token symbols and feeTier
+  const poolData = usePoolData(address)
+  const token0Symbol = poolData?.token0?.symbol
+  const token1Symbol = poolData?.token1?.symbol
+  const feeTier = poolData?.feeTier
+
+  // Earliest data point as startTime for price history request
+  const startTime = useMemo(() => {
+    const first = data?.data?.[0]
+    return first ? Math.floor(first.date / ONE_DAY_S) * ONE_DAY_S : 0
+  }, [data])
+
+  const symbols = useMemo(() => [token0Symbol, token1Symbol].filter(Boolean) as string[], [token0Symbol, token1Symbol])
+
+  const priceHistory = usePriceHistory(chainId, symbols, startTime)
+
+  return useMemo(() => {
+    if (!data?.data) return undefined
+    const lookup0 = token0Symbol && priceHistory[token0Symbol] ? buildPriceLookup(priceHistory[token0Symbol]) : null
+    const lookup1 = token1Symbol && priceHistory[token1Symbol] ? buildPriceLookup(priceHistory[token1Symbol]) : null
+
+    if (!lookup0 && !lookup1) return data.data
+
+    const poolFeeTier = feeTier ?? 3_000
+
+    return data.data.map((entry) => {
+      const t0 = entry.tvlToken0 ?? 0
+      const t1 = entry.tvlToken1 ?? 0
+      const vol0 = entry.volumeToken0 ?? 0
+      const p0 = lookup0 ? lookup0(entry.date) : 0
+      const p1 = lookup1 ? lookup1(entry.date) : 0
+
+      const totalValueLockedUSD = t0 * p0 + t1 * p1
+      const volumeUSD = vol0 * p0
+      const feesUSD = volumeUSD * (poolFeeTier / 1_000_000)
+
+      return { ...entry, totalValueLockedUSD, volumeUSD, feesUSD }
+    })
+  }, [data, priceHistory, token0Symbol, token1Symbol, feeTier])
 }
 
 export const usePoolTickData = (address: string): PoolTickData | undefined => {
