@@ -72,6 +72,9 @@ const InfoNav: React.FC<{ isStableSwap: boolean }> = ({ isStableSwap }) => {
     if (router?.pathname?.includes('/tokens')) {
       return 2
     }
+    if (router?.pathname?.includes('/report')) {
+      return 3
+    }
     return 0
   }, [router.pathname])
   const stableSwapQuery = isStableSwap ? '?type=stableSwap' : ''
@@ -88,6 +91,9 @@ const InfoNav: React.FC<{ isStableSwap: boolean }> = ({ isStableSwap }) => {
             </ButtonMenuItem>
             <ButtonMenuItem as={NextLinkFromReactRouter} to={`/${v3InfoPath}${chainPath}/tokens${stableSwapQuery}`}>
               {t('Tokens')}
+            </ButtonMenuItem>
+            <ButtonMenuItem as={NextLinkFromReactRouter} to={`/${v3InfoPath}${chainPath}/report`}>
+              {t('Report')}
             </ButtonMenuItem>
           </ButtonMenu>
         </Box>
@@ -133,6 +139,7 @@ export const NetworkSwitcher: React.FC<{ activeIndex: number }> = ({ activeIndex
       if (activeIndex === 0) router.push(`/${v3InfoPath}${chainPath}`)
       if (activeIndex === 1) router.push(`/${v3InfoPath}${chainPath}/pairs`)
       if (activeIndex === 2) router.push(`/${v3InfoPath}${chainPath}/tokens`)
+      if (activeIndex === 3) router.push(`/${v3InfoPath}${chainPath}/report`)
     },
     [router, activeIndex],
   )
